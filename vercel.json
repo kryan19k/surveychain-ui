@@ -1,6 +1,6 @@
 {
   "functions": {
-    "api/surveys/create.ts": {
+    "app/api/**/*.ts": {
       "maxDuration": 30
     }
   }
