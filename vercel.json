@@ -1,0 +1,7 @@
+{
+  "functions": {
+    "api/surveys/create/*.ts": {
+      "maxDuration": 30
+    }
+  }
+}

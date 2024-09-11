@@ -1,11 +1,13 @@
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 //surveys/create/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, Survey } from '@prisma/client';
 import { v4 as uuidv4 } from 'uuid';
 import { z } from 'zod';
 
 const prisma = new PrismaClient();
+console.log('Database URL:', process.env.DATABASE_URL); // Be careful not to log sensitive information
+console.log('Prisma Client initialized');
 
 // Define a schema for input validation
 const surveySchema = z.object({
@@ -34,31 +36,37 @@ export async function POST(request: NextRequest) {
     // Validate input data
     const validatedData = surveySchema.parse(surveyData);
 
-    const newSurvey = await prisma.survey.create({
-      data: {
-        creator: validatedData.creator,
-        title: validatedData.title,
-        description: validatedData.description,
-        tokenReward: validatedData.tokenReward,
-        endTime: new Date(validatedData.endTime),
-        maxResponses: validatedData.maxResponses,
-        minimumResponseTime: validatedData.minimumResponseTime,
-        tags: validatedData.tags,
-        imageUri: validatedData.imageUri || null,
-        questions: {
-          create: validatedData.questions.map((q) => ({
-            text: q.text,
-            type: q.type,
-            options: q.options ? JSON.stringify(q.options) : null,
-            min: q.min,
-            max: q.max,
-          })),
+    // Add a timeout to the database operation
+    const newSurvey = await Promise.race([
+      prisma.survey.create({
+        data: {
+          creator: validatedData.creator,
+          title: validatedData.title,
+          description: validatedData.description,
+          tokenReward: validatedData.tokenReward,
+          endTime: new Date(validatedData.endTime),
+          maxResponses: validatedData.maxResponses,
+          minimumResponseTime: validatedData.minimumResponseTime,
+          tags: validatedData.tags,
+          imageUri: validatedData.imageUri || null,
+          questions: {
+            create: validatedData.questions.map((q) => ({
+              text: q.text,
+              type: q.type,
+              options: q.options ? JSON.stringify(q.options) : null,
+              min: q.min,
+              max: q.max,
+            })),
+          },
         },
-      },
-      include: {
-        questions: true,
-      },
-    });
+        include: {
+          questions: true,
+        },
+      }),
+      new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Database operation timed out')), 10000)
+      )
+    ]) as Survey & { questions: Array<{ id: string, text: string, type: string, options: string | null, min: number | null, max: number | null }> };
 
     const privateKey = uuidv4();
 
