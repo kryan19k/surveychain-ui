@@ -1,4 +1,7 @@
+/* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/await-thenable */
+// app/metagraph/page.tsx
+
 "use client"
 
 import React, { useEffect, useState } from "react"
@@ -13,6 +16,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { toast } from "@/components/ui/use-toast"
 import { WalletAddress } from "@/components/blockchain/wallet-address"
 import { WalletBalance } from "@/components/blockchain/wallet-balance"
+import { useStargazerContext } from "@/components/providers/stargazerprovider"
 
 import {
   createSurvey,
@@ -57,6 +61,7 @@ export default function MetagraphTestPage() {
   const { connect, connectors } = useConnect()
   const { disconnect } = useDisconnect()
   const { data: balanceData } = useBalance({ address })
+  const stargazerContext = useStargazerContext()
 
   const [surveys, setSurveys] = useState<Survey[]>([])
   const [selectedSurvey, setSelectedSurvey] = useState<Survey | null>(null)
@@ -68,8 +73,16 @@ export default function MetagraphTestPage() {
   const [newQuestionType, setNewQuestionType] = useState("text")
 
   useEffect(() => {
-    void fetchSurveys()
-  }, [])
+    if (isConnected && !stargazerContext.isConnected) {
+      void stargazerContext.activate()
+    }
+  }, [isConnected, stargazerContext])
+
+  useEffect(() => {
+    if (stargazerContext.isConnected) {
+      void fetchSurveys()
+    }
+  }, [stargazerContext.isConnected])
 
   const handleConnect = async () => {
     try {
@@ -112,7 +125,8 @@ export default function MetagraphTestPage() {
       console.error("Error fetching surveys:", error)
       toast({
         title: "Error",
-        description: "Failed to fetch surveys",
+        description:
+          error instanceof Error ? error.message : "Failed to fetch surveys",
         variant: "destructive",
       })
     }
@@ -154,10 +168,10 @@ export default function MetagraphTestPage() {
   }
 
   const handleCreateSurvey = async () => {
-    if (!isConnected || !address) {
+    if (!stargazerContext.isConnected || !stargazerContext.address) {
       toast({
         title: "Error",
-        description: "Please connect your wallet first",
+        description: "Please connect your Stargazer wallet first",
         variant: "destructive",
       })
       return
@@ -189,6 +203,8 @@ export default function MetagraphTestPage() {
         minimumResponseTime: 60,
         tags: [],
       })
+      console.log("Survey created successfully:", newSurvey)
+
       setSurveys([...surveys, newSurvey])
       setNewSurveyTitle("")
       setNewSurveyDescription("")
@@ -225,7 +241,7 @@ export default function MetagraphTestPage() {
           </p>
         </div>
 
-        {isConnected ? (
+        {stargazerContext.isConnected ? (
           <>
             <motion.div
               className="card mb-8 bg-base-100 shadow-xl"
@@ -244,7 +260,6 @@ export default function MetagraphTestPage() {
                 </div>
               </div>
             </motion.div>
-
             <motion.div
               className="card mb-8 bg-base-100 shadow-xl"
               initial={{ opacity: 0, y: 20 }}
@@ -272,6 +287,7 @@ export default function MetagraphTestPage() {
                     onChange={(e) => setNewQuestionText(e.target.value)}
                     className="mb-2"
                   />
+
                   <select
                     value={newQuestionType}
                     onChange={(e) => setNewQuestionType(e.target.value)}
@@ -404,10 +420,12 @@ export default function MetagraphTestPage() {
                   d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
                 />
               </svg>
-              <span>Please connect your wallet to use the test page.</span>
+              <span>
+                Please connect your Stargazer wallet to use the test page.
+              </span>
             </div>
             <Button onClick={handleConnect} className="btn-primary">
-              Connect Wallet
+              Connect Stargazer Wallet
             </Button>
           </div>
         )}

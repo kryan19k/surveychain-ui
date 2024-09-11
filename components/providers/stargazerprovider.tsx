@@ -2,15 +2,15 @@ import React, { createContext, ReactNode, useContext } from "react"
 
 import {
   IStargazerWalletHookState,
-  useStargazer,
+  useStargazerWallet,
 } from "@/lib/hooks/useStargazerWallet"
 
-const StargazerContext = createContext<
-  ReturnType<typeof useStargazer> | undefined
->(undefined)
+const StargazerContext = createContext<IStargazerWalletHookState | undefined>(
+  undefined
+)
 
 export function StargazerProvider({ children }: { children: ReactNode }) {
-  const stargazerState = useStargazer()
+  const stargazerState = useStargazerWallet()
 
   return (
     <StargazerContext.Provider value={stargazerState}>

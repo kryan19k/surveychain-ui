@@ -1,14 +1,19 @@
 "use client"
 
 import { useTheme } from "next-themes"
+import { FaDotCircle, FaPaintBrush, FaTree, FaWater } from "react-icons/fa"
 import {
   FaCircleNodes,
   FaCode,
   FaCube,
+  FaDiamond,
   FaMicrochip,
   FaNetworkWired,
 } from "react-icons/fa6"
-import { LuLaptop, LuMoon, LuSun } from "react-icons/lu"
+import { FiCoffee } from "react-icons/fi"
+import { GiMeditation, GiVampireDracula } from "react-icons/gi"
+import { LuLaptop, LuMoon, LuSun, LuSunDim } from "react-icons/lu"
+import { PiSunDimThin } from "react-icons/pi"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -25,10 +30,17 @@ export function ModeToggle() {
     { value: "dark", label: "Dark", icon: LuMoon },
     { value: "system", label: "System", icon: LuLaptop },
     { value: "cyberpunk", label: "Cyberpunk", icon: FaCube },
-    { value: "synthwave", label: "Synthwave", icon: FaCircleNodes },
-    { value: "night", label: "Night", icon: FaNetworkWired },
-    { value: "corporate", label: "Corporate", icon: FaMicrochip },
     { value: "wireframe", label: "Wireframe", icon: FaCode },
+    { value: "dim", label: "Dim", icon: PiSunDimThin },
+    { value: "luxury", label: "Luxury", icon: FaDiamond },
+    { value: "business", label: "Business", icon: LuLaptop },
+    { value: "night", label: "Night", icon: LuMoon },
+    { value: "coffee", label: "Coffee", icon: FiCoffee },
+    { value: "forest", label: "Forest", icon: FaTree },
+    { value: "black", label: "Black", icon: FaDotCircle },
+    { value: "aqua", label: "Aqua", icon: FaWater },
+    { value: "lofi", label: "Lofi", icon: GiMeditation },
+    { value: "pastel", label: "Pastel", icon: FaPaintBrush },
   ]
 
   return (

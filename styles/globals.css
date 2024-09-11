@@ -83,7 +83,53 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-base-100 text-base-content;
     font-feature-settings: "rlig" 1, "calt" 1;
   }
+}
+@layer components {
+  .text-theme-primary {
+    @apply text-primary;
+  }
+  
+  .text-theme-secondary {
+    @apply text-secondary;
+  }
+  
+  .text-theme-accent {
+    @apply text-accent;
+  }
+  
+  .text-theme-neutral {
+    @apply text-neutral;
+  }
+}
+
+/* Theme-specific adjustments */
+[data-theme="cyberpunk"] .text-theme-primary,
+[data-theme="halloween"] .text-theme-primary,
+[data-theme="forest"] .text-theme-primary,
+[data-theme="black"] .text-theme-primary,
+[data-theme="luxury"] .text-theme-primary,
+[data-theme="business"] .text-theme-primary,
+[data-theme="night"] .text-theme-primary,
+[data-theme="coffee"] .text-theme-primary {
+  @apply text-accent;
+}
+
+[data-theme="synthwave"] .text-theme-primary,
+[data-theme="retro"] .text-theme-primary,
+[data-theme="valentine"] .text-theme-primary,
+[data-theme="aqua"] .text-theme-primary,
+[data-theme="lofi"] .text-theme-primary,
+[data-theme="pastel"] .text-theme-primary,
+[data-theme="fantasy"] .text-theme-primary,
+[data-theme="wireframe"] .text-theme-primary,
+[data-theme="cmyk"] .text-theme-primary,
+[data-theme="autumn"] .text-theme-primary,
+[data-theme="acid"] .text-theme-primary,
+[data-theme="lemonade"] .text-theme-primary,
+[data-theme="dim"] .text-theme-primary,
+[data-theme="winter"] .text-theme-primary {
+  @apply text-primary-content;
 }
