@@ -4,7 +4,15 @@ import React from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { motion } from "framer-motion"
-import { FaChartBar, FaCoins, FaUsers } from "react-icons/fa"
+import {
+  FaChartBar,
+  FaChartLine,
+  FaCoins,
+  FaCubes,
+  FaLock,
+  FaShieldAlt,
+  FaUsers,
+} from "react-icons/fa"
 
 import { siteConfig } from "@/config/site"
 import { cn } from "@/lib/utils"
@@ -19,7 +27,7 @@ export default function HomePage() {
       <main className="grow">
         <HeroSection />
         <FeaturesSection />
-        <TechnologySection /> {/* Add this new section */}
+        <TechnologySection />
         <HowItWorksSection />
         <FeaturedSurveysSection />
         <TestimonialsSection />
@@ -182,33 +190,90 @@ function FeaturesSection() {
   )
 }
 
-// Add this new section
 function TechnologySection() {
+  const features = [
+    {
+      icon: <FaLock className="text-3xl text-primary" />,
+      title: "Decentralized Security",
+      description: "Secure survey data storage across multiple chains",
+    },
+    {
+      icon: <FaChartLine className="text-3xl text-secondary" />,
+      title: "Transparent Results",
+      description: "Immutable and verifiable survey outcomes",
+    },
+    {
+      icon: <FaCubes className="text-3xl text-accent" />,
+      title: "Scalable Infrastructure",
+      description: "Handle large-scale surveys with ease",
+    },
+    {
+      icon: <FaShieldAlt className="text-3xl text-info" />,
+      title: "Data Integrity",
+      description: "Enhanced reliability through blockchain technology",
+    },
+  ]
+
   return (
-    <section className="bg-base-100 py-20">
+    <section className="bg-gradient-to-br from-base-100 to-base-200 py-20">
       <div className="container mx-auto px-4">
-        <div className="card bg-base-200 shadow-xl">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="card bg-base-100 shadow-xl overflow-hidden"
+        >
           <div className="card-body">
-            <h2 className="card-title text-2xl font-bold mb-4">
-              Powered by Constellation Network&apos;s Metagraph
+            <h2 className="card-title text-3xl font-bold mb-6 text-center">
+              Powered by Web3 Multichain Technology
             </h2>
-            <p className="mb-4">
+            <p className="mb-6 text-center text-lg">
               SurveyChain leverages the power of Constellation Network&apos;s
-              Metagraph technology to ensure:
+              Metagraph and EVM-compatible chains to create a robust, multichain
+              survey platform.
             </p>
-            <ul className="list-disc list-inside mb-4">
-              <li>Decentralized and secure survey data storage</li>
-              <li>Transparent and immutable survey results</li>
-              <li>Scalable infrastructure for handling large-scale surveys</li>
-              <li>Enhanced data integrity and reliability</li>
-            </ul>
-            <p>
-              By utilizing Constellation&apos;s Metagraph, we provide a
-              cutting-edge platform that revolutionizes the way surveys are
-              conducted and analyzed.
-            </p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {features.map((feature, index) => (
+                <motion.div
+                  key={feature.title}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.5, delay: index * 0.1 }}
+                  className="flex items-start space-x-4"
+                >
+                  <div className="shrink-0">{feature.icon}</div>
+                  <div>
+                    <h3 className="font-semibold text-lg mb-2">
+                      {feature.title}
+                    </h3>
+                    <p>{feature.description}</p>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.4 }}
+              className="mt-8 p-4 bg-base-200 rounded-lg"
+            >
+              <h3 className="font-bold text-xl mb-2">
+                Web3 Multichain Integration
+              </h3>
+              <p>
+                Our platform seamlessly integrates with both
+                Constellation&apos;s Metagraph and EVM-compatible chains,
+                offering:
+              </p>
+              <ul className="list-disc list-inside mt-2 space-y-1">
+                <li>Cross-chain interoperability for survey data</li>
+                <li>Enhanced security through distributed consensus</li>
+                <li>Flexible token rewards across multiple chains</li>
+                <li>Scalable and efficient survey processing</li>
+              </ul>
+            </motion.div>
           </div>
-        </div>
+        </motion.div>
       </div>
     </section>
   )

@@ -59,6 +59,13 @@ export const WalletConnect = ({
 
   return (
     <span className={className} {...props}>
+      <div className="flex flex-row gap-2 p-2">
+        {showStargazerButton && (
+          <Button onClick={handleStargazerConnect} disabled={isActivating}>
+            {isActivating ? "Connecting Stargazer..." : "Connect Stargazer"}
+          </Button>
+        )}
+      </div>
       <ConnectButton
         showBalance={false}
         accountStatus={{
@@ -70,11 +77,6 @@ export const WalletConnect = ({
           largeScreen: "icon",
         }}
       />
-      {showStargazerButton && (
-        <Button onClick={handleStargazerConnect} disabled={isActivating}>
-          {isActivating ? "Connecting Stargazer..." : "Connect Stargazer"}
-        </Button>
-      )}
     </span>
   )
 }
