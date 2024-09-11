@@ -23,7 +23,7 @@ import { LinkComponent } from "../shared/link-component"
 
 export function MainNav() {
   return (
-    <div className="flex w-full items-center justify-between">
+    <div className="hidden sm:flex w-full items-center justify-between">
       <div className="flex items-center">
         <Link href="/" className="mr-6 flex items-center space-x-2">
           <LightDarkImage
@@ -34,7 +34,7 @@ export function MainNav() {
             height={32}
             width={32}
           />
-          <span className="hidden bg-gradient-to-br from-blue-500 to-purple-600 bg-clip-text text-2xl font-bold text-transparent dark:from-blue-400 dark:to-purple-500 sm:inline-block">
+          <span className="hidden bg-gradient-to-br from-blue-500 to-purple-700 bg-clip-text text-2xl font-bold text-transparent dark:from-blue-400 dark:to-purple-500 sm:inline-block">
             {siteConfig.name}
           </span>
         </Link>
@@ -80,10 +80,10 @@ function MainNavMenu() {
               <ListItem href="/surveyCreation" title="Create Survey">
                 Start a new survey and reach your audience
               </ListItem>
-              <ListItem href="/my-surveys" title="My Surveys">
+              <ListItem href="/surveys" title="My Surveys">
                 Manage and analyze your existing surveys
               </ListItem>
-              <ListItem href="/SurveyParticipation" title="Explore">
+              <ListItem href="/SurveyParticipation" title="Participate">
                 Discover and participate in public surveys
               </ListItem>
             </ul>

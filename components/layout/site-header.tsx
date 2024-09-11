@@ -21,18 +21,18 @@ export function SiteHeader() {
         scrolled && "bg-background/50 "
       )}
     >
-      <div className="container flex h-20 sm:h-24 items-center justify-between">
+      <div className="container flex h-16 sm:h-20 items-center justify-between">
         <div className="flex items-center">
           <MainNav />
           <MobileNav />
         </div>
 
-        <div className="flex items-center space-x-4 sm:space-x-6">
+        <div className="flex items-center space-x-2 sm:space-x-4">
           <Link
             href="/dashboard"
             className={cn(
-              buttonVariants({ variant: "ghost", size: "lg" }),
-              "hidden sm:inline-flex text-lg px-4 py-2"
+              buttonVariants({ variant: "ghost", size: "sm" }),
+              "hidden sm:inline-flex"
             )}
           >
             Dashboard
@@ -42,12 +42,11 @@ export function SiteHeader() {
             whileTap={{ scale: 0.95 }}
             className="hidden sm:block"
           >
-            <Avatar className="h-10 w-10 sm:h-12 sm:w-12">
+            <Avatar className="h-8 w-8 sm:h-10 sm:w-10">
               <AvatarImage src="https://github.com/shadcn.png" alt="@shadcn" />
               <AvatarFallback>CN</AvatarFallback>
             </Avatar>
           </motion.div>
-          <div className="h-10 w-10 sm:h-12 sm:w-12" />
           <ModeToggle />
         </div>
       </div>
