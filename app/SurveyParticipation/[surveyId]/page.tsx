@@ -1,8 +1,9 @@
+/* eslint-disable @typescript-eslint/no-unnecessary-type-assertion */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
 "use client"
 
 import React, { useEffect, useState } from "react"
-import Image from "next/image"
-import { useRouter } from "next/navigation"
+import { useParams, useRouter } from "next/navigation"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { AnimatePresence, motion } from "framer-motion"
 import { Controller, useForm } from "react-hook-form"
@@ -25,7 +26,7 @@ interface Survey {
   questions: Array<{
     text: string
     type: "text" | "number" | "radio" | "checkbox" | "scale"
-    options?: string[]
+    options?: Array<string | number> | string
     min?: number
     max?: number
   }>
@@ -39,15 +40,17 @@ interface Survey {
 }
 
 export default function SurveyParticipationPage() {
+  const params = useParams()
+  const surveyId = params.surveyId as string
   const router = useRouter()
-  const [surveys, setSurveys] = useState<Survey[]>([])
-  const [selectedSurvey, setSelectedSurvey] = useState<Survey | null>(null)
+  const [survey, setSurvey] = useState<Survey | null>(null)
   const [currentQuestion, setCurrentQuestion] = useState(0)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [userRewards, setUserRewards] = useState("0")
   const { address } = useAccount()
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [startTime, setStartTime] = useState<number | null>(null)
 
   const schema = z.object({
     answers: z.array(z.union([z.string(), z.number(), z.array(z.string())])),
@@ -66,57 +69,31 @@ export default function SurveyParticipationPage() {
   })
 
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchSurvey = async () => {
       setIsLoading(true)
-      setError(null)
       try {
-        await Promise.all([
-          selectedSurvey?.id && fetchSurveys(selectedSurvey.id),
-          fetchUserRewards(),
-        ])
+        const response = await fetch(`/api/surveys/${surveyId}`)
+        if (!response.ok) {
+          throw new Error(`Failed to fetch survey: ${response.statusText}`)
+        }
+        const data: Survey = await response.json()
+        setSurvey(data)
+        setStartTime(Date.now())
       } catch (error) {
-        console.error("Error fetching data:", error)
+        console.error("Error fetching survey:", error)
         setError(error instanceof Error ? error.message : "An error occurred")
       } finally {
         setIsLoading(false)
       }
     }
 
-    void fetchData()
-  }, [address])
-
-  const fetchSurveys = async (surveyId: string) => {
-    try {
-      const response = await fetch(`/api/surveys/${surveyId}`)
-      if (!response.ok) {
-        throw new Error(`Failed to fetch surveys: ${response.statusText}`)
-      }
-      const data: Survey[] = await response.json()
-      setSurveys(data)
-    } catch (error) {
-      console.error("Error fetching surveys:", error)
-      throw error
+    if (surveyId) {
+      void fetchSurvey()
     }
-  }
-
-  const fetchUserRewards = async () => {
-    if (address) {
-      try {
-        const response = await fetch(`/api/rewards/${address}`)
-        if (!response.ok) {
-          throw new Error("Failed to fetch user rewards")
-        }
-        const data = await response.json()
-        setUserRewards(data.rewardBalance)
-      } catch (error) {
-        console.error("Error fetching user rewards:", error)
-        throw error
-      }
-    }
-  }
+  }, [surveyId])
 
   const onSubmit = async (data: FormData) => {
-    if (!address || !selectedSurvey) {
+    if (!address || !survey || startTime === null) {
       toast({
         title: "Error",
         description:
@@ -128,33 +105,40 @@ export default function SurveyParticipationPage() {
 
     setIsSubmitting(true)
     try {
-      const encryptedAnswers = encryptAnswers(data.answers, "some-public-key")
-      const response = await fetch(
-        `/api/surveys/${selectedSurvey.id}/responses`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            respondent: address,
-            encryptedAnswers,
-          }),
-        }
-      )
+      const completionTime = (Date.now() - startTime) / 1000 // in seconds
+      console.log("Submitting survey response")
+      const response = await fetch(`/api/surveys/${surveyId}/responses`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          respondent: address,
+          answers: data.answers,
+          completionTime,
+        }),
+      })
 
-      if (!response.ok) throw new Error("Failed to submit survey")
+      if (!response.ok) {
+        const errorData = await response.json()
+        console.error("Survey submission response:", response.status, errorData)
+        throw new Error(errorData.error || "Failed to submit survey")
+      }
 
+      console.log("Survey response submitted successfully")
       toast({
         title: "Success!",
         description: "Your survey response has been submitted.",
       })
 
-      setSelectedSurvey(null)
       reset()
       void router.push("/thank-you")
     } catch (error) {
+      console.error("Error submitting survey:", error)
       toast({
         title: "Error",
-        description: "Failed to submit survey. Please try again.",
+        description:
+          error instanceof Error
+            ? error.message
+            : "Failed to submit survey. Please try again.",
         variant: "destructive",
       })
     } finally {
@@ -166,6 +150,13 @@ export default function SurveyParticipationPage() {
     question: Survey["questions"][number],
     index: number
   ) => {
+    // Parse options if they're stored as a string
+    const options = Array.isArray(question.options)
+      ? question.options
+      : question.options
+      ? JSON.parse(question.options as string)
+      : []
+
     switch (question.type) {
       case "text":
         return (
@@ -203,18 +194,20 @@ export default function SurveyParticipationPage() {
             control={control}
             render={({ field }) => (
               <div className="form-control">
-                {question.options?.map((option, optionIndex) => (
-                  <label key={optionIndex} className="label cursor-pointer">
-                    <span className="label-text">{option}</span>
-                    <input
-                      type="radio"
-                      className="radio-primary radio"
-                      value={option}
-                      checked={field.value === option}
-                      onChange={() => field.onChange(option)}
-                    />
-                  </label>
-                ))}
+                {options.map(
+                  (option: any, optionIndex: React.Key | null | undefined) => (
+                    <label key={optionIndex} className="label cursor-pointer">
+                      <span className="label-text">{String(option)}</span>
+                      <input
+                        type="radio"
+                        className="radio-primary radio"
+                        value={String(option)}
+                        checked={field.value === String(option)}
+                        onChange={() => field.onChange(String(option))}
+                      />
+                    </label>
+                  )
+                )}
               </div>
             )}
           />
@@ -226,22 +219,29 @@ export default function SurveyParticipationPage() {
             control={control}
             render={({ field }) => (
               <div className="form-control">
-                {question.options?.map((option, optionIndex) => (
-                  <label key={optionIndex} className="label cursor-pointer">
-                    <span className="label-text">{option}</span>
-                    <Checkbox
-                      checked={(field.value as string[])?.includes(option)}
-                      onCheckedChange={(checked) => {
-                        const updatedValue = checked
-                          ? [...((field.value as string[]) || []), option]
-                          : ((field.value as string[]) || []).filter(
-                              (item) => item !== option
-                            )
-                        field.onChange(updatedValue)
-                      }}
-                    />
-                  </label>
-                ))}
+                {options.map(
+                  (option: any, optionIndex: React.Key | null | undefined) => (
+                    <label key={optionIndex} className="label cursor-pointer">
+                      <span className="label-text">{String(option)}</span>
+                      <Checkbox
+                        checked={(field.value as string[])?.includes(
+                          String(option)
+                        )}
+                        onCheckedChange={(checked) => {
+                          const updatedValue = checked
+                            ? [
+                                ...((field.value as string[]) || []),
+                                String(option),
+                              ]
+                            : ((field.value as string[]) || []).filter(
+                                (item) => item !== String(option)
+                              )
+                          field.onChange(updatedValue)
+                        }}
+                      />
+                    </label>
+                  )
+                )}
               </div>
             )}
           />
@@ -275,192 +275,100 @@ export default function SurveyParticipationPage() {
   }
 
   if (isLoading) {
-    return (
-      <div className="container mx-auto p-4">
-        <div className="animate-pulse">
-          <div className="mb-4 h-12 w-3/4 rounded bg-base-300"></div>
-          <div className="mb-2 h-6 w-full rounded bg-base-300"></div>
-          <div className="mb-2 h-6 w-full rounded bg-base-300"></div>
-          <div className="mb-4 h-48 w-full rounded bg-base-300"></div>
-          <div className="h-10 w-1/4 rounded bg-base-300"></div>
-        </div>
-      </div>
-    )
+    return <div>Loading survey...</div>
   }
 
   if (error) {
-    return (
-      <div className="container mx-auto p-4">
-        <div role="alert" className="alert alert-error">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-6 w-6 shrink-0 stroke-current"
-            fill="none"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
-            />
-          </svg>
-          <span>{error}</span>
-        </div>
-        <Button className="mt-4" onClick={() => router.push("/surveys")}>
-          Back to Surveys
-        </Button>
-      </div>
-    )
+    return <div>Error: {error}</div>
+  }
+
+  if (!survey) {
+    return <div>Survey not found</div>
   }
 
   return (
     <div className="container mx-auto p-4">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-      >
-        <div className="card mb-6 bg-base-100 shadow-xl">
-          <div className="card-body">
-            <div className="flex items-center justify-between">
-              <WalletAddress />
-              <WalletBalance />
-              <div className="text-sm">Reward Balance: {userRewards} DAG</div>
-            </div>
+      <div className="card mb-6 bg-base-100 shadow-xl">
+        <div className="card-body">
+          <div className="flex items-center justify-between">
+            <WalletAddress />
+            <WalletBalance />
+            <div className="text-sm">Reward Balance: {userRewards} DAG</div>
           </div>
         </div>
+      </div>
 
-        {!selectedSurvey ? (
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {surveys.map((survey) => (
-              <motion.div
-                key={survey.id}
-                className="card bg-base-100 shadow-xl"
-                whileHover={{ scale: 1.05 }}
-                transition={{ type: "spring", stiffness: 300 }}
-              >
-                <div className="card-body">
-                  <h2 className="card-title">{survey.title}</h2>
-                  <p className="text-sm">{survey.description}</p>
-                  <div className="mt-4 flex flex-wrap gap-2">
-                    {survey.tags.map((tag, index) => (
-                      <span key={index} className="badge badge-primary">
-                        {tag}
-                      </span>
-                    ))}
-                  </div>
-                  <div className="mt-4 grid grid-cols-2 gap-2 text-sm">
-                    <div>Reward: {survey.tokenReward} DAG</div>
-                    <div>
-                      Ends: {new Date(survey.endTime).toLocaleDateString()}
-                    </div>
-                    <div>Max Responses: {survey.maxResponses}</div>
-                    <div>Min Time: {survey.minimumResponseTime}s</div>
-                    <div>Participants: {survey.totalParticipants}</div>
-                    <div>Avg Time: {survey.averageCompletionTime}min</div>
-                  </div>
-                  <div className="card-actions justify-end mt-4">
-                    <Button onClick={() => setSelectedSurvey(survey)}>
-                      Participate
-                    </Button>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        ) : (
-          <form onSubmit={handleSubmit(onSubmit)}>
+      <div className="card mb-6 bg-base-100 shadow-xl">
+        <div className="card-body">
+          <h2 className="card-title">{survey.title}</h2>
+          <p>{survey.description}</p>
+        </div>
+      </div>
+
+      <form onSubmit={handleSubmit(onSubmit)}>
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={currentQuestion}
+            initial={{ opacity: 0, x: 50 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -50 }}
+            transition={{ duration: 0.3 }}
+          >
             <div className="card mb-6 bg-base-100 shadow-xl">
               <div className="card-body">
-                <h2 className="card-title">{selectedSurvey.title}</h2>
-                <p>{selectedSurvey.description}</p>
-                {selectedSurvey.imageUri && (
-                  <figure>
-                    <Image
-                      src={selectedSurvey.imageUri}
-                      alt="Survey Image"
-                      width={400}
-                      height={300}
-                      layout="responsive"
-                      className="rounded-lg"
-                    />
-                  </figure>
+                <h2 className="card-title">
+                  {survey.questions[currentQuestion].text}
+                </h2>
+                {renderQuestion(
+                  survey.questions[currentQuestion],
+                  currentQuestion
                 )}
               </div>
             </div>
+          </motion.div>
+        </AnimatePresence>
 
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={currentQuestion}
-                initial={{ opacity: 0, x: 50 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -50 }}
-                transition={{ duration: 0.3 }}
-              >
-                <div className="card mb-6 bg-base-100 shadow-xl">
-                  <div className="card-body">
-                    <h2 className="card-title">
-                      {selectedSurvey.questions[currentQuestion].text}
-                    </h2>
-                    {renderQuestion(
-                      selectedSurvey.questions[currentQuestion],
-                      currentQuestion
-                    )}
-                  </div>
-                </div>
-              </motion.div>
-            </AnimatePresence>
+        <div className="flex justify-between">
+          <Button
+            className="btn btn-outline"
+            onClick={() => setCurrentQuestion((prev) => Math.max(0, prev - 1))}
+            disabled={currentQuestion === 0}
+          >
+            Previous
+          </Button>
+          {currentQuestion < survey.questions.length - 1 ? (
+            <Button
+              className="btn btn-primary"
+              onClick={() =>
+                setCurrentQuestion((prev) =>
+                  Math.min(survey.questions.length - 1, prev + 1)
+                )
+              }
+            >
+              Next
+            </Button>
+          ) : (
+            <Button
+              className="btn btn-primary"
+              type="submit"
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? "Submitting..." : "Submit Survey"}
+            </Button>
+          )}
+        </div>
 
-            <div className="flex justify-between">
-              <Button
-                className="btn btn-outline"
-                onClick={() =>
-                  setCurrentQuestion((prev) => Math.max(0, prev - 1))
-                }
-                disabled={currentQuestion === 0}
-              >
-                Previous
-              </Button>
-              {currentQuestion < selectedSurvey.questions.length - 1 ? (
-                <Button
-                  className="btn btn-primary"
-                  onClick={() =>
-                    setCurrentQuestion((prev) =>
-                      Math.min(selectedSurvey.questions.length - 1, prev + 1)
-                    )
-                  }
-                >
-                  Next
-                </Button>
-              ) : (
-                <Button
-                  className="btn btn-primary"
-                  type="submit"
-                  disabled={isSubmitting}
-                >
-                  {isSubmitting ? "Submitting..." : "Submit Survey"}
-                </Button>
-              )}
-            </div>
-
-            <div className="mt-6">
-              <progress
-                className="progress progress-primary w-full"
-                value={
-                  ((currentQuestion + 1) / selectedSurvey.questions.length) *
-                  100
-                }
-                max="100"
-              ></progress>
-              <p className="mt-2 text-center">
-                Question {currentQuestion + 1} of{" "}
-                {selectedSurvey.questions.length}
-              </p>
-            </div>
-          </form>
-        )}
-      </motion.div>
+        <div className="mt-6">
+          <progress
+            className="progress progress-primary w-full"
+            value={((currentQuestion + 1) / survey.questions.length) * 100}
+            max="100"
+          ></progress>
+          <p className="mt-2 text-center">
+            Question {currentQuestion + 1} of {survey.questions.length}
+          </p>
+        </div>
+      </form>
     </div>
   )
 }

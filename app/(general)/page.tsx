@@ -117,12 +117,13 @@ function HeroSection() {
                 Explore Surveys
               </Link>
               <Link
-                href="/metagraph"
+                href="/tokenomics"
                 className={cn(
-                  buttonVariants({ variant: "outline", size: "lg" })
+                  buttonVariants({ variant: "outline", size: "lg" }),
+                  "mx-4"
                 )}
               >
-                Metagraph
+                Tokenomics
               </Link>
             </motion.div>
           </div>

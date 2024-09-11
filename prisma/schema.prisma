@@ -43,6 +43,7 @@ model Survey {
 
   questions Question[]
   responses Response[]
+  surveyKey         SurveyKey?
 }
 
 model Question {
@@ -63,4 +64,12 @@ model Response {
   surveyId         String
   completionTime   Int?
   survey           Survey @relation(fields: [surveyId], references: [id])
+}
+
+model SurveyKey {
+  id                String   @id @default(uuid()) @map("_id")
+  surveyId          String   @unique
+  encryptedSurveyId String
+  iv                String
+  survey            Survey   @relation(fields: [surveyId], references: [id])
 }

@@ -22,7 +22,7 @@ interface SurveyCreationParams {
 
 interface SurveyCreationResult {
   surveyId: string
-  privateKey: string
+  accessKey: string
 }
 
 export function useCreateSurvey() {
@@ -56,7 +56,7 @@ export function useCreateSurvey() {
       }
 
       setSurveyId(data.surveyId)
-      setPrivateKey(data.privateKey)
+      setPrivateKey(data.accessKey)
 
       return data
     } catch (err) {

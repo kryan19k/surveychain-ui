@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/restrict-template-expressions */
 "use client"
 
 import React, { useEffect, useState } from "react"
@@ -65,6 +66,12 @@ export default function SurveyParticipationPage() {
     resolver: zodResolver(schema),
     defaultValues: { answers: [] },
   })
+
+  useEffect(() => {
+    if (selectedSurvey) {
+      setCurrentQuestion(0)
+    }
+  }, [selectedSurvey])
 
   useEffect(() => {
     const fetchData = async () => {
@@ -145,8 +152,30 @@ export default function SurveyParticipationPage() {
 
     setIsSubmitting(true)
     try {
-      const encryptedAnswers = encryptAnswers(data.answers, "some-public-key")
+      // Fetch the survey key
+      console.log(`Fetching survey key for survey ID: ${selectedSurvey.id}`)
+      const keyResponse = await fetch(`/api/surveys/${selectedSurvey.id}/key`)
+      if (!keyResponse.ok) {
+        const errorText = await keyResponse.text()
+        console.error(
+          "Survey key fetch response:",
+          keyResponse.status,
+          errorText
+        )
+        throw new Error(
+          `Failed to fetch survey key: ${keyResponse.statusText}. ${errorText}`
+        )
+      }
+      const keyData = await keyResponse.json()
+      const accessKey = keyData.accessKey
+      if (!accessKey) {
+        throw new Error("Access key not found in response")
+      }
+      console.log("Successfully fetched survey key")
+
+      const encryptedAnswers = encryptAnswers(data.answers, accessKey)
       const completionTime = (Date.now() - startTime) / 1000 // in seconds
+      console.log("Submitting survey response")
       const response = await fetch(
         `/api/surveys/${selectedSurvey.id}/responses`,
         {
@@ -154,14 +183,20 @@ export default function SurveyParticipationPage() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             respondent: address,
+            answers: data.answers, // Include unencrypted answers for debugging
             encryptedAnswers,
             completionTime,
           }),
         }
       )
 
-      if (!response.ok) throw new Error("Failed to submit survey")
+      if (!response.ok) {
+        const errorData = await response.json()
+        console.error("Survey submission response:", response.status, errorData)
+        throw new Error(errorData.error || "Failed to submit survey")
+      }
 
+      console.log("Survey response submitted successfully")
       toast({
         title: "Success!",
         description: "Your survey response has been submitted.",
@@ -172,14 +207,28 @@ export default function SurveyParticipationPage() {
       reset()
       void router.push("/thank-you")
     } catch (error) {
+      console.error("Error submitting survey:", error)
       toast({
         title: "Error",
-        description: "Failed to submit survey. Please try again.",
+        description:
+          error instanceof Error
+            ? error.message
+            : "Failed to submit survey. Please try again.",
         variant: "destructive",
       })
     } finally {
       setIsSubmitting(false)
     }
+  }
+
+  const handleNextQuestion = () => {
+    setCurrentQuestion((prev) =>
+      Math.min(selectedSurvey!.questions.length - 1, prev + 1)
+    )
+  }
+
+  const handlePreviousQuestion = () => {
+    setCurrentQuestion((prev) => Math.max(0, prev - 1))
   }
 
   const renderQuestion = (
@@ -401,7 +450,7 @@ export default function SurveyParticipationPage() {
             ))}
           </div>
         ) : (
-          <form onSubmit={handleSubmit(onSubmit)}>
+          <>
             <div className="card mb-6 bg-base-100 shadow-xl">
               <div className="card-body">
                 <h2 className="card-title">{selectedSurvey.title}</h2>
@@ -421,34 +470,34 @@ export default function SurveyParticipationPage() {
               </div>
             </div>
 
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={currentQuestion}
-                initial={{ opacity: 0, x: 50 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -50 }}
-                transition={{ duration: 0.3 }}
-              >
-                <div className="card mb-6 bg-base-100 shadow-xl">
-                  <div className="card-body">
-                    <h2 className="card-title">
-                      {selectedSurvey.questions[currentQuestion].text}
-                    </h2>
-                    {renderQuestion(
-                      selectedSurvey.questions[currentQuestion],
-                      currentQuestion
-                    )}
+            <form>
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={currentQuestion}
+                  initial={{ opacity: 0, x: 50 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -50 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <div className="card mb-6 bg-base-100 shadow-xl">
+                    <div className="card-body">
+                      <h2 className="card-title">
+                        {selectedSurvey.questions[currentQuestion].text}
+                      </h2>
+                      {renderQuestion(
+                        selectedSurvey.questions[currentQuestion],
+                        currentQuestion
+                      )}
+                    </div>
                   </div>
-                </div>
-              </motion.div>
-            </AnimatePresence>
+                </motion.div>
+              </AnimatePresence>
+            </form>
 
-            <div className="flex justify-between">
+            <div className="flex justify-between mt-4">
               <Button
                 className="btn btn-outline"
-                onClick={() =>
-                  setCurrentQuestion((prev) => Math.max(0, prev - 1))
-                }
+                onClick={handlePreviousQuestion}
                 disabled={currentQuestion === 0}
               >
                 Previous
@@ -456,18 +505,14 @@ export default function SurveyParticipationPage() {
               {currentQuestion < selectedSurvey.questions.length - 1 ? (
                 <Button
                   className="btn btn-primary"
-                  onClick={() =>
-                    setCurrentQuestion((prev) =>
-                      Math.min(selectedSurvey.questions.length - 1, prev + 1)
-                    )
-                  }
+                  onClick={handleNextQuestion}
                 >
                   Next
                 </Button>
               ) : (
                 <Button
                   className="btn btn-primary"
-                  type="submit"
+                  onClick={handleSubmit(onSubmit)}
                   disabled={isSubmitting}
                 >
                   {isSubmitting ? "Submitting..." : "Submit Survey"}
@@ -489,7 +534,7 @@ export default function SurveyParticipationPage() {
                 {selectedSurvey.questions.length}
               </p>
             </div>
-          </form>
+          </>
         )}
       </motion.div>
     </div>

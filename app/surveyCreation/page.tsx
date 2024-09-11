@@ -25,6 +25,7 @@ import { toast } from "@/components/ui/use-toast"
 import { WalletAddress } from "@/components/blockchain/wallet-address"
 import { WalletBalance } from "@/components/blockchain/wallet-balance"
 import { WalletEnsName } from "@/components/blockchain/wallet-ens-name"
+import { AccessKeyModal } from "@/components/privatekeymodal"
 import { IsWalletConnected } from "@/components/shared/is-wallet-connected"
 import { IsWalletDisconnected } from "@/components/shared/is-wallet-disconnected"
 import { useOpenAIPrompt } from "@/integrations/openai/hooks/use-openai-prompt"
@@ -81,7 +82,7 @@ type AISurveyOptions = {
 // Add this type definition
 type SurveyCreationResult = {
   surveyId: string | number
-  privateKey: string
+  accessKey: string
 }
 
 export default function SurveyCreationPage() {
@@ -127,6 +128,10 @@ export default function SurveyCreationPage() {
     name: "questions",
   })
 
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [createdSurveyId, setCreatedSurveyId] = useState("")
+  const [createdAccessKey, setCreatedAccessKey] = useState("")
+
   const onSubmit = async (data: SurveyFormData) => {
     setIsSubmitting(true)
     setIsCreatingSurvey(true)
@@ -168,17 +173,18 @@ export default function SurveyCreationPage() {
         variant: "default",
       })
 
-      // Store the private key in local storage
-      localStorage.setItem(`survey_key_${result.surveyId}`, result.privateKey)
+      // Set the created survey details and open the modal
+      setCreatedSurveyId(result.surveyId.toString())
+      setCreatedAccessKey(result.accessKey)
+      setIsModalOpen(true)
 
-      // Redirect to the survey details page
-      router.push(`/surveys/${result.surveyId}`)
-      console.log(`Redirecting to /surveys/${result.surveyId}`)
+      // Clear the form
+      reset()
     } catch (error) {
       console.error("Error creating survey:", error)
       toast({
-        title: "Error creating survey",
-        description: error instanceof Error ? error.message : String(error),
+        title: "Error",
+        description: "Failed to create survey. Please try again.",
         variant: "destructive",
       })
     } finally {
@@ -758,6 +764,17 @@ export default function SurveyCreationPage() {
           </motion.div>
         </form>
       </motion.div>
+
+      {/* Add the AccessKeyModal */}
+      <AccessKeyModal
+        isOpen={isModalOpen}
+        onClose={() => {
+          setIsModalOpen(false)
+          router.push(`/surveys/${createdSurveyId}`)
+        }}
+        surveyId={createdSurveyId}
+        accessKey={createdAccessKey}
+      />
     </div>
   )
 }

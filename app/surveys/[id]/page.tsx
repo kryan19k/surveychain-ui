@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-call */
 //surveys/[id]/page.tsx
 /* eslint-disable @typescript-eslint/restrict-template-expressions */
 "use client"
@@ -16,6 +17,7 @@ import { WalletBalance } from "@/components/blockchain/wallet-balance"
 import { WalletEnsName } from "@/components/blockchain/wallet-ens-name"
 import { IsWalletConnected } from "@/components/shared/is-wallet-connected"
 import { IsWalletDisconnected } from "@/components/shared/is-wallet-disconnected"
+import { SurveyResponsesAccess } from "@/components/SurveyResponsesAccess"
 
 interface Survey {
   id: string
@@ -267,44 +269,7 @@ export default function AdvancedSurveyView() {
         >
           <div className="card-body">
             <h2 className="card-title text-2xl mb-4">Responses</h2>
-            {decryptedResponses.length > 0 ? (
-              decryptedResponses.map((response, index) => (
-                <div key={index} className="mb-4 p-4 bg-base-200 rounded-lg">
-                  <h3 className="text-lg font-semibold mb-2">
-                    Respondent: {response.respondent}
-                  </h3>
-                  <ul className="list-disc list-inside">
-                    {/* eslint-disable-next-line @typescript-eslint/no-unsafe-call */}
-                    {response.answers.map(
-                      (answer: any, answerIndex: number) => (
-                        <li key={answerIndex}>
-                          {typeof answer === "object"
-                            ? JSON.stringify(answer)
-                            : String(answer)}
-                        </li>
-                      )
-                    )}
-                  </ul>
-                </div>
-              ))
-            ) : (
-              <div className="alert alert-info">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  className="stroke-current shrink-0 w-6 h-6"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                  ></path>
-                </svg>
-                <span>No responses yet.</span>
-              </div>
-            )}
+            <SurveyResponsesAccess surveyId={survey.id} />
           </div>
         </motion.div>
       </motion.div>

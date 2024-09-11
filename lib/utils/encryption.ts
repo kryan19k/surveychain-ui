@@ -4,31 +4,51 @@ import CryptoJS from 'crypto-js';
 type Answer = string | number | string[];
 
 export const encryptAnswers = (answers: Answer[], privateKey: string): string => {
-  const answersString = JSON.stringify(answers);
-  return CryptoJS.AES.encrypt(answersString, privateKey).toString();
+  try {
+    const answersString = JSON.stringify(answers);
+    console.log('Answers before encryption:', answersString);
+    const encrypted = CryptoJS.AES.encrypt(answersString, privateKey).toString();
+    console.log('Encrypted answers:', encrypted);
+    return encrypted;
+  } catch (error) {
+    console.error('Error encrypting answers:', error);
+    throw new Error('Failed to encrypt answers');
+  }
 };
 
-export const decryptAnswers = (encryptedAnswers: string, privateKey: string): Answer[] => {
-  const bytes = CryptoJS.AES.decrypt(encryptedAnswers, privateKey);
-  const decryptedString = bytes.toString(CryptoJS.enc.Utf8);
-  const parsedAnswers = JSON.parse(decryptedString);
-  
-  // Validate the parsed data
-  if (!Array.isArray(parsedAnswers)) {
-    throw new Error('Decrypted data is not an array');
+export function decryptAnswers(encryptedData: string, key: string): string {
+  try {
+    if (!encryptedData) {
+      console.error("Encrypted data is empty");
+      return "";
+    }
+    
+    console.log("Encrypted data:", encryptedData);
+    console.log("Decryption key:", key);
+    
+    const bytes = CryptoJS.AES.decrypt(encryptedData, key);
+    console.log("Decrypted bytes:", bytes.toString());
+    
+    const decryptedText = bytes.toString(CryptoJS.enc.Utf8);
+    
+    if (!decryptedText) {
+      console.error("Decryption resulted in empty string");
+      return "";
+    }
+    
+    console.log("Decrypted text:", decryptedText);
+    
+    // Attempt to parse the decrypted text as JSON to ensure it's valid
+    JSON.parse(decryptedText);
+    
+    return decryptedText;
+  } catch (error) {
+    console.error("Error in decryptAnswers:", error);
+    if (error instanceof Error) {
+      console.error("Error message:", error.message);
+      console.error("Error stack:", error.stack);
+    }
+    // Instead of throwing, return an error message
+    return JSON.stringify({ error: "Failed to decrypt answers" });
   }
-  
-  // Type guard function
-  const isValidAnswer = (answer: unknown): answer is Answer => {
-    return typeof answer === 'string' || 
-           typeof answer === 'number' || 
-           (Array.isArray(answer) && answer.every(item => typeof item === 'string'));
-  };
-  
-  // Validate each answer
-  if (!parsedAnswers.every(isValidAnswer)) {
-    throw new Error('Decrypted data contains invalid answer types');
-  }
-  
-  return parsedAnswers;
-};
+}
