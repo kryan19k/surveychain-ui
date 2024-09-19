@@ -19,8 +19,6 @@ import { chains, transports } from "@/config/networks"
 import { siteConfig } from "@/config/site"
 import { useColorMode } from "@/lib/state/color-mode"
 
-//import { stargazerWalletWagmiConnector } from "@/lib/stargazerConnector"
-
 const wagmiConfig: Config = getDefaultConfig({
   appName: siteConfig.title,
   projectId: env.NEXT_PUBLIC_WC_PROJECT_ID,
