@@ -38,7 +38,7 @@ const TokenomicsPage: React.FC = () => {
           transition={{ duration: 0.5, delay: 0.2 }}
         >
           <Link
-            href="/tokenomics/pdf-viewer"
+            href="/tokenomics"
             className={cn(
               buttonVariants({ variant: "outline", size: "lg" }),
               "flex items-center space-x-2"
