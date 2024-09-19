@@ -4,9 +4,26 @@
 "use client"
 
 import React, { useEffect, useState } from "react"
+import Image from "next/image"
 import { useParams } from "next/navigation"
 import { motion } from "framer-motion"
-import { FiAward, FiClock, FiTag, FiUsers } from "react-icons/fi"
+import {
+  FiAward,
+  FiClock,
+  FiCopy,
+  FiDownload,
+  FiShare2,
+  FiTag,
+  FiUsers,
+} from "react-icons/fi"
+import {
+  FacebookIcon,
+  FacebookShareButton,
+  LinkedinIcon,
+  LinkedinShareButton,
+  TwitterIcon,
+  TwitterShareButton,
+} from "react-share"
 
 import { FADE_DOWN_ANIMATION_VARIANTS } from "@/config/design"
 import { decryptAnswers } from "@/lib/utils/encryption"
@@ -46,6 +63,8 @@ export default function AdvancedSurveyView() {
   const [survey, setSurvey] = useState<Survey | null>(null)
   const [decryptedResponses, setDecryptedResponses] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const [qrCode, setQrCode] = useState<string | null>(null)
+  const [copySuccess, setCopySuccess] = useState<string>("")
 
   useEffect(() => {
     const surveyId = params?.id as string
@@ -89,6 +108,48 @@ export default function AdvancedSurveyView() {
     } finally {
       setLoading(false)
     }
+  }
+
+  const generateQRCode = async () => {
+    if (!survey) {
+      toast({
+        title: "Survey not loaded",
+        description: "Please try again later.",
+        variant: "destructive",
+      })
+      return
+    }
+
+    try {
+      const response = await fetch(`/api/qr-code?surveyId=${survey.id}`)
+      if (!response.ok) {
+        throw new Error("Failed to generate QR code")
+      }
+      const data = await response.json()
+      setQrCode(data.qrCode)
+    } catch (error) {
+      console.error("Error generating QR code:", error)
+      toast({
+        title: "Error",
+        description: "Failed to generate QR code. Please try again.",
+        variant: "destructive",
+      })
+    }
+  }
+
+  const shareUrl = typeof window !== "undefined" ? window.location.href : ""
+
+  const copyToClipboard = () => {
+    navigator.clipboard
+      .writeText(shareUrl)
+      .then(() => {
+        setCopySuccess("Link copied to clipboard!")
+        setTimeout(() => setCopySuccess(""), 3000)
+      })
+      .catch(() => {
+        setCopySuccess("Failed to copy!")
+        setTimeout(() => setCopySuccess(""), 3000)
+      })
   }
 
   if (loading) {
@@ -234,6 +295,82 @@ export default function AdvancedSurveyView() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
+        >
+          <div className="card-body">
+            <h2 className="card-title text-2xl mb-4">Share This Survey</h2>
+            <div className="flex flex-col md:flex-row items-center justify-between">
+              {/* Social Media Buttons */}
+              <div className="flex space-x-4 mb-4 md:mb-0">
+                <FacebookShareButton url={shareUrl} title={survey.title}>
+                  <FacebookIcon size={40} round />
+                </FacebookShareButton>
+                <TwitterShareButton url={shareUrl} title={survey.title}>
+                  <TwitterIcon size={40} round />
+                </TwitterShareButton>
+                <LinkedinShareButton
+                  url={shareUrl}
+                  title={survey.title}
+                  summary={survey.description}
+                >
+                  <LinkedinIcon size={40} round />
+                </LinkedinShareButton>
+                {/* Add more platforms as needed */}
+              </div>
+
+              {/* Copy Link */}
+              <div className="flex items-center space-x-2">
+                <input
+                  type="text"
+                  value={shareUrl}
+                  readOnly
+                  className="input input-bordered w-full max-w-xs"
+                />
+                <button onClick={copyToClipboard} className="btn btn-primary">
+                  <FiCopy className="mr-2" /> Copy Link
+                </button>
+              </div>
+            </div>
+            {copySuccess && (
+              <p className="text-green-500 mt-2">{copySuccess}</p>
+            )}
+
+            {/* QR Code Section */}
+            <div className="mt-6">
+              <h3 className="text-lg font-semibold mb-2 flex items-center">
+                <FiShare2 className="mr-2 text-primary" />
+                QR Code
+              </h3>
+              {qrCode ? (
+                <div className="flex flex-col items-center">
+                  <Image
+                    src={qrCode}
+                    alt="Survey QR Code"
+                    width={200}
+                    height={200}
+                  />
+                  <a
+                    href={qrCode}
+                    download={`survey-${survey.id}-qr-code.png`}
+                    className="btn btn-primary mt-4 flex items-center"
+                  >
+                    <FiDownload className="mr-2" />
+                    Download QR Code
+                  </a>
+                </div>
+              ) : (
+                <button onClick={generateQRCode} className="btn btn-primary">
+                  Generate QR Code
+                </button>
+              )}
+            </div>
+          </div>
+        </motion.div>
+
+        <motion.div
+          className="card bg-base-100 shadow-xl mt-8"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.6 }}
         >
           <div className="card-body">
             <h2 className="card-title text-2xl mb-4">Questions</h2>

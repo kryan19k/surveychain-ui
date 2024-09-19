@@ -1,63 +1,29 @@
+/* eslint-disable @typescript-eslint/restrict-template-expressions */
 "use client"
 
-import React, { useState } from "react"
-import { Document, Page, pdfjs } from "react-pdf"
+import React from "react"
+import { Viewer, Worker } from "@react-pdf-viewer/core"
+import { defaultLayoutPlugin } from "@react-pdf-viewer/default-layout"
 
-import "react-pdf/dist/esm/Page/AnnotationLayer.css"
-import "react-pdf/dist/esm/Page/TextLayer.css"
-
-// Configure pdfjs worker
-pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`
-
-if (typeof Promise.withResolvers !== "function") {
-  Promise.withResolvers = function <T>() {
-    let resolve!: (value: T | PromiseLike<T>) => void
-    let reject!: (reason?: any) => void
-    const promise = new Promise<T>((res, rej) => {
-      resolve = res
-      reject = rej
-    })
-    return { promise, resolve, reject }
-  }
-}
+import "@react-pdf-viewer/core/lib/styles/index.css"
+import "@react-pdf-viewer/default-layout/lib/styles/index.css"
 
 const PDFViewer: React.FC = () => {
-  const [numPages, setNumPages] = useState<number | null>(null)
-  const [pageNumber, setPageNumber] = useState(1)
-
-  function onDocumentLoadSuccess({ numPages }: { numPages: number }) {
-    setNumPages(numPages)
-  }
+  const defaultLayoutPluginInstance = defaultLayoutPlugin()
 
   return (
     <div className="flex flex-col items-center min-h-screen bg-gradient-to-br from-purple-700 via-indigo-800 to-blue-900 text-white p-8">
       <h1 className="text-3xl font-bold mb-8">Sentiment Tokenomics PDF</h1>
-      <div className="bg-white p-4 rounded-lg shadow-lg">
-        <Document
-          file="/SentimentTokenomics.pdf"
-          onLoadSuccess={onDocumentLoadSuccess}
-        >
-          <Page pageNumber={pageNumber} />
-        </Document>
-      </div>
-      <p className="mt-4">
-        Page {pageNumber} of {numPages}
-      </p>
-      <div className="flex space-x-4 mt-4">
-        <button
-          className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-          onClick={() => setPageNumber(pageNumber - 1)}
-          disabled={pageNumber <= 1}
-        >
-          Previous
-        </button>
-        <button
-          className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-          onClick={() => setPageNumber(pageNumber + 1)}
-          disabled={pageNumber >= (numPages || 0)}
-        >
-          Next
-        </button>
+      <div
+        className="bg-white p-4 rounded-lg shadow-lg"
+        style={{ width: "100%", height: "calc(100vh - 200px)" }}
+      >
+        <Worker workerUrl="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js">
+          <Viewer
+            fileUrl={`${process.env.NEXT_PUBLIC_BASE_URL}/SentimentTokenomics.pdf`}
+            plugins={[defaultLayoutPluginInstance]}
+          />
+        </Worker>
       </div>
     </div>
   )

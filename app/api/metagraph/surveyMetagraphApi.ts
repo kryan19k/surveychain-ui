@@ -9,7 +9,7 @@ import { dag4 } from '@stardust-collective/dag4';
 import { activateStargazerProviders, getDAGAccounts, signDAGMessage, getDAGPublicKey } from '@/lib/utils/stargazer';
 import { sha256 } from 'ethers/lib/utils';
 
-const METAGRAPH_L1_DATA_URL = `https://cors-anywhere.herokuapp.com/${process.env.NEXT_PUBLIC_METAGRAPH_L1_DATA_URL || 'http://localhost:9400'}`;
+const METAGRAPH_L1_DATA_URL =  'http://localhost:9400';
 
 const getEncoded = (value: any): string => {
   return JSON.stringify(value);

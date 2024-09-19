@@ -7,7 +7,7 @@ import { Provider as RWBProvider } from "react-wrap-balancer"
 import { useIsMounted } from "@/lib/hooks/use-is-mounted"
 import HandleWalletEvents from "@/components/blockchain/handle-wallet-events"
 
-import { CombinedWeb3Provider } from "./combinedproviders"
+import { RainbowKit } from "./rainbow-kit"
 
 interface RootProviderProps {
   children: ReactNode
@@ -23,9 +23,9 @@ export default function RootProvider({ children }: RootProviderProps) {
       disableTransitionOnChange
     >
       <RWBProvider>
-        <CombinedWeb3Provider>
+        <RainbowKit>
           <HandleWalletEvents>{children}</HandleWalletEvents>
-        </CombinedWeb3Provider>
+        </RainbowKit>
       </RWBProvider>
     </ThemeProvider>
   ) : null

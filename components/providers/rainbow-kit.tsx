@@ -11,7 +11,9 @@ import {
   RainbowKitProvider,
 } from "@rainbow-me/rainbowkit"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
-import { WagmiProvider } from "wagmi"
+import { WagmiProvider, type Config } from "wagmi"
+
+// Add this import
 
 import { chains, transports } from "@/config/networks"
 import { siteConfig } from "@/config/site"
@@ -19,7 +21,7 @@ import { useColorMode } from "@/lib/state/color-mode"
 
 //import { stargazerWalletWagmiConnector } from "@/lib/stargazerConnector"
 
-const wagmiConfig = getDefaultConfig({
+const wagmiConfig: Config = getDefaultConfig({
   appName: siteConfig.title,
   projectId: env.NEXT_PUBLIC_WC_PROJECT_ID,
   chains,

@@ -12,6 +12,7 @@ const nextConfig = {
       "images.unsplash.com",
       "cloudflare-ipfs.com",
       "gateway.ipfs.io",
+      "localhost", // Add your domain here
     ],
   },
   env: {
