@@ -1,8 +1,11 @@
+/* eslint-disable react/jsx-no-undef */
 "use client"
 
+import { useEffect } from "react"
 import { useTheme } from "next-themes"
 import { FaDotCircle, FaPaintBrush, FaTree, FaWater } from "react-icons/fa"
 import {
+  FaCheck,
   FaCircleNodes,
   FaCode,
   FaCube,
@@ -19,11 +22,19 @@ import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 
 export function ModeToggle() {
   const { setTheme, theme } = useTheme()
+
+  useEffect(() => {
+    // Apply the theme to the html element
+    if (theme) {
+      document.documentElement.setAttribute("data-theme", theme)
+    }
+  }, [theme])
 
   const themes = [
     { value: "light", label: "Light", icon: LuSun },
@@ -54,22 +65,15 @@ export function ModeToggle() {
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-56">
         {themes.map((t) => (
-          <div key={t.value} className="form-control">
-            <label className="label cursor-pointer gap-4">
-              <span className="label-text flex items-center">
+          <DropdownMenuItem key={t.value} onClick={() => setTheme(t.value)}>
+            <div className="flex items-center justify-between w-full">
+              <span className="flex items-center">
                 {t.icon && <t.icon className="mr-2 h-4 w-4" />}
                 {t.label}
               </span>
-              <input
-                type="radio"
-                name="theme-radios"
-                className="theme-controller radio"
-                value={t.value}
-                checked={theme === t.value}
-                onChange={() => setTheme(t.value)}
-              />
-            </label>
-          </div>
+              {theme === t.value && <FaCheck className="h-4 w-4" />}
+            </div>
+          </DropdownMenuItem>
         ))}
       </DropdownMenuContent>
     </DropdownMenu>

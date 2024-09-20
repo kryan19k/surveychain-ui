@@ -27,9 +27,9 @@ export function MainNav() {
       <div className="flex items-center">
         <Link href="/" className="mr-6 flex items-center space-x-2">
           <LightDarkImage
-            LightImage="/SC.png"
-            DarkImage="/SC.png"
-            alt="SurveyChain"
+            LightImage="/sentiment-logo.png"
+            DarkImage="/sentiment-logo.png"
+            alt="Sentiment"
             className="rounded-full"
             height={32}
             width={32}
@@ -61,15 +61,15 @@ function MainNavMenu() {
                     href="/"
                   >
                     <LightDarkImage
-                      LightImage="/SC.png"
-                      DarkImage="/SC.png"
+                      LightImage="/sentiment-logo.png"
+                      DarkImage="/sentiment-logo.png"
                       alt="SurveyChain"
                       className="h-16 w-16 rounded-full"
                       height={64}
                       width={64}
                     />
                     <div className="mb-2 mt-4 text-lg font-medium text-white">
-                      SurveyChain
+                      Sentiment
                     </div>
                     <p className="text-sm leading-tight text-white/90">
                       Decentralized surveys powered by blockchain technology
@@ -116,6 +116,13 @@ function MainNavMenu() {
           </LinkComponent>
         </NavigationMenuItem>
       </NavigationMenuList>
+      <NavigationMenuItem>
+        <LinkComponent href="/dataMarketplace">
+          <NavigationMenuLink className={navigationMenuTriggerStyle()}>
+            <span>Data Marketplace</span>
+          </NavigationMenuLink>
+        </LinkComponent>
+      </NavigationMenuItem>
     </NavigationMenu>
   )
 }

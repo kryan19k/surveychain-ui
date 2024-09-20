@@ -86,7 +86,7 @@ function HeroSection() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
             >
-              Revolutionize Your Surveys with Blockchain
+              Revolutionize Your Surveys with Web3
             </motion.h1>
             <motion.p
               className="mb-8 text-xl"
@@ -132,8 +132,16 @@ function HeroSection() {
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.5, delay: 0.2 }}
-              className="artboard artboard-horizontal max-h-full overflow-hidden h-full"
-            ></motion.div>
+              className="relative w-full h-[400px]"
+            >
+              <Image
+                src="/meta.png"
+                alt="SurveyChain Hero Image"
+                layout="fill"
+                objectFit="contain"
+                priority
+              />
+            </motion.div>
           </div>
         </div>
       </div>
@@ -323,7 +331,7 @@ function FeaturedSurveysSection() {
         <h2 className="mb-12 text-center text-3xl font-bold">
           Featured Surveys
         </h2>
-        <SurveyList />
+        <SurveyList limit={3} />
         <div className="mt-8 text-center">
           <Link
             href="/surveyParticipation"

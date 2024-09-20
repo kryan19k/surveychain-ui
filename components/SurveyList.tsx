@@ -5,7 +5,11 @@ import Link from "next/link"
 
 import { Survey } from "@/app/mockDataStore"
 
-export function SurveyList() {
+interface SurveyListProps {
+  limit?: number
+}
+
+export function SurveyList({ limit }: SurveyListProps) {
   const [surveys, setSurveys] = useState<Survey[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -47,9 +51,11 @@ export function SurveyList() {
     return <div>No surveys found</div>
   }
 
+  const displayedSurveys = limit ? surveys.slice(0, limit) : surveys
+
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-      {surveys.map((survey) => (
+      {displayedSurveys.map((survey) => (
         <div key={survey.id} className="card bg-base-100 shadow-xl">
           <div className="card-body">
             <h2 className="card-title">{survey.title}</h2>

@@ -18,11 +18,11 @@ interface SiteConfig {
 export const SITE_CANONICAL = "https://surveychain.xyz"
 
 export const siteConfig: SiteConfig = {
-  name: "SurveyChain",
-  title: "SurveyChain - Decentralized Surveys",
+  name: "Sentiment",
+  title: "Sentiment - Decentralized Surveys",
   emoji: "⚡",
   description:
-    "Revolutionize Your Surveys with Blockchain",
+    "Take Control of Your Data",
   localeDefault: "en",
   links: {
     docs: "",
